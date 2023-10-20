@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -221,4 +222,39 @@ void db_close(Table *table)
     }
     free(pager);
     free(table);
+}
+
+typedef struct
+{
+    Table *table;
+    uint32_t row_num;
+    bool end_of_table; // Indicates a position one past the last element
+} Cursor;
+
+Cursor *table_start(Table *table)
+{
+    Cursor *cursor = malloc(sizeof(Cursor));
+    cursor->table = table;
+    cursor->row_num = 0;
+    cursor->end_of_table = (table->num_rows == 0);
+
+    return cursor;
+}
+
+Cursor *table_end(Table *table)
+{
+    Cursor *cursor = malloc(sizeof(Cursor));
+    cursor->table = table;
+    cursor->row_num = table->num_rows;
+    cursor->end_of_table = true;
+    return cursor;
+}
+
+void cursor_advance(Cursor *cursor)
+{
+    cursor->row_num += 1;
+    if (cursor->row_num >= cursor->table->num_rows)
+    {
+        cursor->end_of_table = true;
+    }
 }

@@ -38,10 +38,12 @@ typedef enum
 } StatementType;
 
 // 确定特定行在内存中读取/写入的位置
-void *row_slot(Table *table, uint32_t row_num)
+void *cursor_value(Cursor *cursor)
 {
+    uint32_t row_num = cursor->row_num;
     uint32_t page_num = row_num / ROWS_PER_PAGE;
-    void *page = get_page(table->pager, page_num);
+
+    void *page = get_page(cursor->table->pager, page_num);
 
     uint32_t row_offset = row_num % ROWS_PER_PAGE;
     uint32_t byte_offset = row_offset * ROW_SIZE;
@@ -69,7 +71,8 @@ PrepareResult prepare_insert(InputBuffer *input_buffer, Statement *statement)
     }
 
     int id = atoi(id_string);
-    if (id < 0) {
+    if (id < 0)
+    {
         return PREPARE_NEGATIVE_ID;
     }
     if (strlen(username) > COLUMN_USERNAME_SIZE)
@@ -126,21 +129,31 @@ ExecuteResult execute_insert(Statement *statement, Table *table)
     }
 
     Row *row_to_insert = &(statement->row_to_insert);
+    Cursor *cursor = table_end(table);
 
-    serialize_row(row_to_insert, row_slot(table, table->num_rows));
+    serialize_row(row_to_insert, cursor_value(cursor));
+
     table->num_rows += 1;
+
+    free(cursor);
 
     return EXIT_SUCCESS;
 }
 
 ExecuteResult execute_select(Statement *statement, Table *table)
 {
+    Cursor *cursor = table_start(table);
+
     Row row;
-    for (uint32_t i = 0; i < table->num_rows; i++)
+    while (!(cursor->end_of_table))
     {
-        deserialize_row(row_slot(table, i), &row);
+        deserialize_row(cursor_value(cursor), &row);
         print_row(&row);
+        cursor_advance(cursor);
     }
+
+    free(cursor);
+
     return EXIT_SUCCESS;
 }
 // 执行语句
@@ -160,14 +173,14 @@ void print_prompt() { printf("db > "); }
 
 int main(int argc, char *argv[])
 {
-    if (argc < 2) {
+    if (argc < 2)
+    {
         printf("Must supply a database filename.\n");
         exit(EXIT_FAILURE);
     }
 
-    char* filename = argv[1];
-    Table* table = db_open(filename);
-
+    char *filename = argv[1];
+    Table *table = db_open(filename);
 
     InputBuffer *input_buffer = new_input_buffer();
 
@@ -178,7 +191,7 @@ int main(int argc, char *argv[])
 
         if (input_buffer->buffer[0] == '.')
         {
-            switch (do_meta_command(input_buffer,table))
+            switch (do_meta_command(input_buffer, table))
             {
             case (META_COMMAND_SUCCESS):
                 continue;
