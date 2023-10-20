@@ -89,10 +89,11 @@ PrepareResult prepare_insert(InputBuffer *input_buffer, Statement *statement)
 }
 
 // 解析meta命令
-MetaCommandResult do_meta_command(InputBuffer *inputBuffer)
+MetaCommandResult do_meta_command(InputBuffer *inputBuffer, Table *table)
 {
     if (strcmp(inputBuffer->buffer, ".exit") == 0)
     {
+        db_close(table);
         exit(EXIT_SUCCESS);
     }
     else
@@ -159,7 +160,15 @@ void print_prompt() { printf("db > "); }
 
 int main(int argc, char *argv[])
 {
-    Table *table = new_table();
+    if (argc < 2) {
+        printf("Must supply a database filename.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    char* filename = argv[1];
+    Table* table = db_open(filename);
+
+
     InputBuffer *input_buffer = new_input_buffer();
 
     while (1)
@@ -169,7 +178,7 @@ int main(int argc, char *argv[])
 
         if (input_buffer->buffer[0] == '.')
         {
-            switch (do_meta_command(input_buffer))
+            switch (do_meta_command(input_buffer,table))
             {
             case (META_COMMAND_SUCCESS):
                 continue;
