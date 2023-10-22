@@ -6,7 +6,6 @@
 #include "inputBuffer.h"
 #include "row.h"
 
-// TODO:添加注释
 
 // 执行结果
 typedef enum
@@ -133,7 +132,7 @@ ExecuteResult execute_insert(Statement *statement, Table *table)
     Row *row_to_insert = &(statement->row_to_insert);
     Cursor *cursor = table_end(table);
 
-    serialize_row(row_to_insert, cursor_value(cursor));
+    serialize_row(row_to_insert, cursor_value(cursor)); // 向table中增加数据
 
     table->num_rows += 1;
 
@@ -147,9 +146,9 @@ ExecuteResult execute_select(Statement *statement, Table *table)
     Cursor *cursor = table_start(table);
 
     Row row;
-    while (!(cursor->end_of_table))
+    while (!(cursor->end_of_table)) // 遍历table
     {
-        deserialize_row(cursor_value(cursor), &row);
+        deserialize_row(cursor_value(cursor), &row); // 解析数据
         print_row(&row);
         cursor_advance(cursor);
     }
@@ -238,7 +237,7 @@ int main(int argc, char *argv[])
 /*
 command:
 
-insert 1 user1 asdfasdf
+insert 1 user1 foo@bar.com
 
 select
 

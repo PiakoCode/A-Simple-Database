@@ -12,7 +12,7 @@
 
 /**
  * @brief 简单的自定义数据结构体
- * 
+ *
  */
 typedef struct
 {
@@ -30,6 +30,8 @@ email       255             36
 total       291
 
 */
+
+// 以下代码为处理数据在磁盘上位置
 #define size_of_attribute(Struct, Attribute) sizeof(((Struct *)0)->Attribute)
 const uint32_t ID_SIZE = size_of_attribute(Row, id);
 const uint32_t USERNAME_SIZE = size_of_attribute(Row, username);
@@ -41,9 +43,9 @@ const uint32_t ROW_SIZE = ID_SIZE + USERNAME_SIZE + EMAIL_SIZE;
 
 /**
  * @brief 持久化数据
- * 
- * @param source 
- * @param destination 
+ *
+ * @param source
+ * @param destination
  */
 void serialize_row(Row *source, void *destination)
 {
@@ -56,9 +58,9 @@ void serialize_row(Row *source, void *destination)
 
 /**
  * @brief 读取数据
- * 
- * @param source 
- * @param destination 
+ *
+ * @param source
+ * @param destination
  */
 void deserialize_row(void *source, Row *destination)
 {
@@ -69,8 +71,8 @@ void deserialize_row(void *source, Row *destination)
 
 /**
  * @brief 打印数据
- * 
- * @param row 
+ *
+ * @param row 数据
  */
 void print_row(Row *row)
 {
@@ -82,21 +84,20 @@ const uint32_t PAGE_SIZE = 4096;
 const uint32_t ROWS_PER_PAGE = PAGE_SIZE / ROW_SIZE;
 const uint32_t TABLE_MAX_ROWS = ROWS_PER_PAGE * TABLE_MAX_PAGES;
 
-
 /**
  * @brief 文件结构体
- * 
+ *
  */
 typedef struct
 {
-    int file_descriptor;
-    uint32_t file_length;
-    void *pages[TABLE_MAX_PAGES];
+    int file_descriptor;          // 文件描述符
+    uint32_t file_length;         // 文件结构体
+    void *pages[TABLE_MAX_PAGES]; // 页数组
 } Pager;
 
 /**
- * @brief 打开文件
- * 
+ * @brief 打开文件，读取文件信息，创建pager
+ *
  * @param filename 文件路径
  * @return Pager* 文件结构体指针
  */
@@ -115,7 +116,7 @@ Pager *pager_open(const char *filename)
         exit(EXIT_FAILURE);
     }
 
-    off_t file_length = lseek(fd, 0, SEEK_END);
+    off_t file_length = lseek(fd, 0, SEEK_END); // 文件长度
 
     Pager *pager = malloc(sizeof(Pager));
     pager->file_descriptor = fd;
@@ -130,7 +131,7 @@ Pager *pager_open(const char *filename)
 
 /**
  * @brief Get the page object
- * 
+ *
  * @param pager 文件结构体指针
  * @param page_num 页号
  * @return void* 页指针
@@ -173,10 +174,10 @@ void *get_page(Pager *pager, uint32_t page_num)
 
 /**
  * @brief TODO:
- * 
- * @param pager 
- * @param page_num 
- * @param size 
+ *
+ * @param pager
+ * @param page_num
+ * @param size
  */
 void pager_flush(Pager *pager, uint32_t page_num, uint32_t size)
 {
@@ -205,7 +206,7 @@ void pager_flush(Pager *pager, uint32_t page_num, uint32_t size)
 
 /**
  * @brief 表 结构体
- * 
+ *
  */
 typedef struct
 {
@@ -213,12 +214,11 @@ typedef struct
     Pager *pager;
 } Table;
 
-
 /**
  * @brief 打开文件读取数据到table中
- * 
- * @param filename 
- * @return Table* 
+ *
+ * @param filename
+ * @return Table*
  */
 Table *db_open(const char *filename)
 {
@@ -234,8 +234,8 @@ Table *db_open(const char *filename)
 
 /**
  * @brief 关闭文件
- * 
- * @param table 
+ *
+ * @param table
  */
 void db_close(Table *table)
 {
@@ -288,7 +288,7 @@ void db_close(Table *table)
 
 /**
  * @brief Cursor结构体 用于遍历数据
- * 
+ *
  */
 typedef struct
 {
