@@ -10,6 +10,10 @@
 #define COLUMN_USERNAME_SIZE 32
 #define COLUMN_EMAIL_SIZE 255
 
+/**
+ * @brief 简单的自定义数据结构体
+ * 
+ */
 typedef struct
 {
     uint32_t id;
@@ -35,6 +39,12 @@ const uint32_t USERNAME_OFFSET = ID_OFFSET + ID_SIZE;
 const uint32_t EMAIL_OFFSET = USERNAME_OFFSET + USERNAME_SIZE;
 const uint32_t ROW_SIZE = ID_SIZE + USERNAME_SIZE + EMAIL_SIZE;
 
+/**
+ * @brief 持久化数据
+ * 
+ * @param source 
+ * @param destination 
+ */
 void serialize_row(Row *source, void *destination)
 {
     memcpy(destination + ID_OFFSET, &(source->id), ID_SIZE);
@@ -44,6 +54,12 @@ void serialize_row(Row *source, void *destination)
     strncpy(destination + EMAIL_OFFSET, source->email, EMAIL_SIZE);
 }
 
+/**
+ * @brief 读取数据
+ * 
+ * @param source 
+ * @param destination 
+ */
 void deserialize_row(void *source, Row *destination)
 {
     memcpy(&(destination->id), source + ID_OFFSET, ID_SIZE);
@@ -51,6 +67,11 @@ void deserialize_row(void *source, Row *destination)
     memcpy(&(destination->email), source + EMAIL_OFFSET, EMAIL_SIZE);
 }
 
+/**
+ * @brief 打印数据
+ * 
+ * @param row 
+ */
 void print_row(Row *row)
 {
     printf("(%d, %s, %s)\n", row->id, row->username, row->email);
@@ -61,6 +82,11 @@ const uint32_t PAGE_SIZE = 4096;
 const uint32_t ROWS_PER_PAGE = PAGE_SIZE / ROW_SIZE;
 const uint32_t TABLE_MAX_ROWS = ROWS_PER_PAGE * TABLE_MAX_PAGES;
 
+
+/**
+ * @brief 文件结构体
+ * 
+ */
 typedef struct
 {
     int file_descriptor;
@@ -68,6 +94,12 @@ typedef struct
     void *pages[TABLE_MAX_PAGES];
 } Pager;
 
+/**
+ * @brief 打开文件
+ * 
+ * @param filename 文件路径
+ * @return Pager* 文件结构体指针
+ */
 Pager *pager_open(const char *filename)
 {
     int fd = open(filename,
@@ -96,6 +128,13 @@ Pager *pager_open(const char *filename)
     return pager;
 }
 
+/**
+ * @brief Get the page object
+ * 
+ * @param pager 文件结构体指针
+ * @param page_num 页号
+ * @return void* 页指针
+ */
 void *get_page(Pager *pager, uint32_t page_num)
 {
     if (page_num > TABLE_MAX_PAGES)
@@ -132,6 +171,13 @@ void *get_page(Pager *pager, uint32_t page_num)
     return pager->pages[page_num];
 }
 
+/**
+ * @brief TODO:
+ * 
+ * @param pager 
+ * @param page_num 
+ * @param size 
+ */
 void pager_flush(Pager *pager, uint32_t page_num, uint32_t size)
 {
     if (pager->pages[page_num] == NULL)
@@ -157,12 +203,23 @@ void pager_flush(Pager *pager, uint32_t page_num, uint32_t size)
     }
 }
 
+/**
+ * @brief 表 结构体
+ * 
+ */
 typedef struct
 {
     uint32_t num_rows;
     Pager *pager;
 } Table;
 
+
+/**
+ * @brief 打开文件读取数据到table中
+ * 
+ * @param filename 
+ * @return Table* 
+ */
 Table *db_open(const char *filename)
 {
     Pager *pager = pager_open(filename);
@@ -175,6 +232,11 @@ Table *db_open(const char *filename)
     return table;
 }
 
+/**
+ * @brief 关闭文件
+ * 
+ * @param table 
+ */
 void db_close(Table *table)
 {
     Pager *pager = table->pager;
@@ -224,6 +286,10 @@ void db_close(Table *table)
     free(table);
 }
 
+/**
+ * @brief Cursor结构体 用于遍历数据
+ * 
+ */
 typedef struct
 {
     Table *table;
