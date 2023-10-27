@@ -92,14 +92,14 @@ typedef struct
 {
     int file_descriptor;          // 文件描述符
     uint32_t file_length;         // 文件结构体
-    void *pages[TABLE_MAX_PAGES]; // 页数组
+    void *pages[TABLE_MAX_PAGES]; // 将文件设为有TABLE_MAX_PAGES(100)页
 } Pager;
 
 /**
- * @brief 打开文件，读取文件信息，创建pager
+ * @brief 加载文件信息到pager中
  *
  * @param filename 文件路径
- * @return Pager* 文件结构体指针
+ * @return Pager* Pager结构体指针
  */
 Pager *pager_open(const char *filename)
 {
@@ -118,10 +118,12 @@ Pager *pager_open(const char *filename)
 
     off_t file_length = lseek(fd, 0, SEEK_END); // 文件长度
 
+    // 加载文件信息到pager中
     Pager *pager = malloc(sizeof(Pager));
     pager->file_descriptor = fd;
     pager->file_length = file_length;
 
+    // 将pages指针设置为NULL
     for (uint32_t i = 0; i < TABLE_MAX_PAGES; i++)
     {
         pager->pages[i] = NULL;
@@ -132,12 +134,13 @@ Pager *pager_open(const char *filename)
 /**
  * @brief Get the page object
  *
- * @param pager 文件结构体指针
+ * @param pager pager结构体指针
  * @param page_num 页号
  * @return void* 页指针
  */
 void *get_page(Pager *pager, uint32_t page_num)
 {
+    // 超出范围
     if (page_num > TABLE_MAX_PAGES)
     {
         printf("Tried to fetch page number out of bounds. %d > %d \n", page_num, TABLE_MAX_PAGES);
@@ -217,8 +220,8 @@ typedef struct
 /**
  * @brief 打开文件读取数据到table中
  *
- * @param filename
- * @return Table*
+ * @param filename 文件名(文件路径)
+ * @return Table*   表
  */
 Table *db_open(const char *filename)
 {
