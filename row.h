@@ -42,9 +42,9 @@ const uint32_t EMAIL_OFFSET = USERNAME_OFFSET + USERNAME_SIZE;
 const uint32_t ROW_SIZE = ID_SIZE + USERNAME_SIZE + EMAIL_SIZE;
 
 /**
- * @brief 持久化数据
+ * @brief 序列化数据
  *
- * @param source
+ * @param source 
  * @param destination
  */
 void serialize_row(Row *source, void *destination)

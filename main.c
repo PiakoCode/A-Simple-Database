@@ -57,15 +57,25 @@ typedef struct
     Row row_to_insert;
 } Statement;
 
+
+/**
+ * @brief 处理insert的字符串（解析insert语句）
+ * 
+ * @param input_buffer 字符串
+ * @param statement 需要存入的statement结构体
+ * @return PrepareResult 处理结果
+ */
 PrepareResult prepare_insert(InputBuffer *input_buffer, Statement *statement)
 {
     statement->type = STATEMENT_INSERT;
 
+    // strtok() --> 分割字符串    要处理的字符串和用作分隔符的字符串。它会将原始字符串分割为多个子字符串，并返回每个子字符串的指针。
     char *keyword = strtok(input_buffer->buffer, " ");
     char *id_string = strtok(NULL, " ");
     char *username = strtok(NULL, " ");
     char *email = strtok(NULL, " ");
 
+    // 输入不符合规范
     if (id_string == NULL || username == NULL || email == NULL)
     {
         return PREPARE_SYNTAX_ERROR;
@@ -85,6 +95,7 @@ PrepareResult prepare_insert(InputBuffer *input_buffer, Statement *statement)
         return PREPARE_STRING_TOO_LONG;
     }
 
+    // 存入statement结构体
     statement->row_to_insert.id = id;
     strcpy(statement->row_to_insert.username, username);
     strcpy(statement->row_to_insert.email, email);
@@ -122,17 +133,28 @@ PrepareResult prepare_statement(InputBuffer *input_buffer, Statement *statement)
     return PREPARE_UNRECOGNIZED_STATEMENT;
 }
 
+/**
+ * @brief 执行insert语句
+ * 
+ * @param statement 语句
+ * @param table 将存入的table
+ * @return ExecuteResult 执行结果
+ */
 ExecuteResult execute_insert(Statement *statement, Table *table)
 {
+    // 超过表的容量
     if (table->num_rows >= TABLE_MAX_ROWS)
     {
         return EXECUTE_TABLE_FULL;
     }
 
+    // 将要插入的row
     Row *row_to_insert = &(statement->row_to_insert);
+    // table的游标(结尾)
     Cursor *cursor = table_end(table);
 
-    serialize_row(row_to_insert, cursor_value(cursor)); // 向table中增加数据
+    // 向table中增加数据
+    serialize_row(row_to_insert, cursor_value(cursor)); 
 
     table->num_rows += 1;
 
@@ -157,6 +179,7 @@ ExecuteResult execute_select(Statement *statement, Table *table)
 
     return EXIT_SUCCESS;
 }
+
 // 执行语句
 ExecuteResult execute_statement(Statement *statement, Table *table)
 {
