@@ -6,7 +6,6 @@
 #include "inputBuffer.h"
 #include "row.h"
 
-
 // 执行结果
 typedef enum
 {
@@ -37,19 +36,6 @@ typedef enum
     STATEMENT_INSERT, // 插入
     STATEMENT_SELECT
 } StatementType;
-
-// 确定特定行在内存中读取/写入的位置
-void *cursor_value(Cursor *cursor)
-{
-    uint32_t row_num = cursor->row_num;
-    uint32_t page_num = row_num / ROWS_PER_PAGE;
-
-    void *page = get_page(cursor->table->pager, page_num);
-
-    uint32_t row_offset = row_num % ROWS_PER_PAGE;
-    uint32_t byte_offset = row_offset * ROW_SIZE;
-    return page + byte_offset;
-}
 
 typedef struct
 {
@@ -100,6 +86,18 @@ MetaCommandResult do_meta_command(InputBuffer *inputBuffer, Table *table)
         db_close(table);
         exit(EXIT_SUCCESS);
     }
+    else if (strcmp(inputBuffer->buffer, ".btree") == 0)
+    {
+        printf("Tree:\n");
+        print_leaf_node(get_page(table->pager, 0));
+        return META_COMMAND_SUCCESS;
+    }
+    else if (strcmp(inputBuffer->buffer, ".constants") == 0)
+    {
+        printf("Constants:\n");
+        print_constants();
+        return META_COMMAND_SUCCESS;
+    }
     else
     {
         return META_COMMAND_UNRECOGNIZED_COMMAND;
@@ -124,7 +122,8 @@ PrepareResult prepare_statement(InputBuffer *input_buffer, Statement *statement)
 
 ExecuteResult execute_insert(Statement *statement, Table *table)
 {
-    if (table->num_rows >= TABLE_MAX_ROWS)
+    void *node = get_page(table->pager, table->root_page_num);
+    if ((*leaf_node_num_cells(node) >= LEAF_NODE_MAX_CELLS))
     {
         return EXECUTE_TABLE_FULL;
     }
@@ -132,9 +131,7 @@ ExecuteResult execute_insert(Statement *statement, Table *table)
     Row *row_to_insert = &(statement->row_to_insert);
     Cursor *cursor = table_end(table);
 
-    serialize_row(row_to_insert, cursor_value(cursor)); // 向table中增加数据
-
-    table->num_rows += 1;
+    leaf_node_insert(cursor, row_to_insert->id, row_to_insert);
 
     free(cursor);
 
