@@ -1,7 +1,3 @@
-//
-// Created by Piako on 23-10-19.
-//
-
 #include "inputBuffer.h"
 #include <stdio.h>
 #include <stdlib.h>
