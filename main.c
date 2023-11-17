@@ -90,7 +90,7 @@ MetaCommandResult do_meta_command(InputBuffer *inputBuffer, Table *table)
     else if (strcmp(inputBuffer->buffer, ".btree") == 0)
     {
         printf("Tree:\n");
-        print_leaf_node(get_page(table->pager, 0));
+        print_tree(table->pager, 0, 0);
         return META_COMMAND_SUCCESS;
     }
     else if (strcmp(inputBuffer->buffer, ".constants") == 0)
@@ -125,10 +125,6 @@ ExecuteResult execute_insert(Statement *statement, Table *table)
 {
     void *node = get_page(table->pager, table->root_page_num);
     uint32_t num_cells = (*leaf_node_num_cells(node));
-    if ((num_cells >= LEAF_NODE_MAX_CELLS))
-    {
-        return EXECUTE_TABLE_FULL;
-    }
 
     Row *row_to_insert = &(statement->row_to_insert);
 
@@ -164,7 +160,6 @@ ExecuteResult execute_select(Statement *statement, Table *table)
     }
 
     free(cursor);
-
     return EXIT_SUCCESS;
 }
 // 执行语句
