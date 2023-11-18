@@ -22,7 +22,7 @@ proc = subprocess.Popen(
 )
 for i in range(101):
     input_texts =test_input[i]
-    time.sleep(0.1)
+    time.sleep(1)
     # 发送输入数据并获取输出
 
     for input_text in input_texts:
