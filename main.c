@@ -179,14 +179,13 @@ void print_prompt() { printf("db > "); }
 
 int main(int argc, char *argv[])
 {
-    // if (argc < 2)
-    // {
-    //     printf("Must supply a database filename.\n");
-    //     exit(EXIT_FAILURE);
-    // }
+    if (argc < 2)
+    {
+        printf("Must supply a database filename.\n");
+        exit(EXIT_FAILURE);
+    }
 
-    // char *filename = argv[1];
-    char *filename = "./mydb.db";
+    char *filename = argv[1];
     Table *table = db_open(filename);
 
     InputBuffer *input_buffer = new_input_buffer();

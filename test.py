@@ -7,7 +7,9 @@ cmd = ["./build/build_my_own_sqlite", "./mydb.db"]
 
 test_input = []
 
-for i in range(100):
+epoch = 10
+
+for i in range(epoch):
     test_input.append(f"insert {i} user{i} user{i}@mail.com\n")
 
 
@@ -20,12 +22,14 @@ proc = subprocess.Popen(
     stderr=subprocess.PIPE,
     text=True,
 )
-for i in range(101):
+for i in range(epoch + 1):
+    
     input_texts =test_input[i]
-    time.sleep(1)
+    time.sleep(0.1)
     # 发送输入数据并获取输出
 
     for input_text in input_texts:
         proc.stdin.write(input_text)
         proc.stdin.flush()
+    print(f"epoch {i} finished!")
         
