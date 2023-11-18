@@ -48,8 +48,6 @@ const uint32_t PAGE_SIZE = 4096;
 const uint32_t ROWS_PER_PAGE = PAGE_SIZE / ROW_SIZE;
 const uint32_t TABLE_MAX_ROWS = ROWS_PER_PAGE * TABLE_MAX_PAGES;
 
-
-
 /**
  * @brief 文件结构体
  *
@@ -131,18 +129,17 @@ const uint32_t LEAF_NODE_LEFT_SPLIT_COUNT = (LEAF_NODE_MAX_CELLS + 1) - LEAF_NOD
 // 内部节点格式
 
 /*
-Internal Node Header Layout 
+Internal Node Header Layout
 */
 
 const uint32_t INTERNAL_NODE_NUM_KEYS_SIZE = sizeof(uint32_t);
 const uint32_t INTERNAL_NODE_NUM_KEYS_OFFSET = COMMON_NODE_HEADER_SIZE;
 const uint32_t INTERNAL_NODE_RIGHT_CHILD_SIZE = sizeof(uint32_t);
-const uint32_t INTERNAL_NODE_RIGHT_CHILD_OFFSET = 
+const uint32_t INTERNAL_NODE_RIGHT_CHILD_OFFSET =
     INTERNAL_NODE_NUM_KEYS_OFFSET + INTERNAL_NODE_NUM_KEYS_SIZE;
 const uint32_t INTERNAL_NODE_HEADER_SIZE = COMMON_NODE_HEADER_SIZE +
                                            INTERNAL_NODE_NUM_KEYS_SIZE +
                                            INTERNAL_NODE_RIGHT_CHILD_SIZE;
-
 
 /*
 Internal Node Body Layout
@@ -150,7 +147,7 @@ Internal Node Body Layout
 
 const uint32_t INTERNAL_NODE_KEY_SIZE = sizeof(uint32_t);
 const uint32_t INTERNAL_NODE_CHILD_SIZE = sizeof(uint32_t);
-const uint32_t INTERNAL_NODE_CELL_SIZE = 
+const uint32_t INTERNAL_NODE_CELL_SIZE =
     INTERNAL_NODE_CHILD_SIZE + INTERNAL_NODE_KEY_SIZE;
 
 uint32_t *leaf_node_num_cells(void *node)
@@ -175,11 +172,11 @@ void *leaf_node_value(void *node, uint32_t cell_num)
 
 void set_node_type(void *node, NodeType type);
 
-void set_node_root(void* node, bool is_root) {
+void set_node_root(void *node, bool is_root)
+{
     uint8_t value = is_root;
-    *((uint8_t*)(node + IS_ROOT_OFFSET)) = value;
+    *((uint8_t *)(node + IS_ROOT_OFFSET)) = value;
 }
-
 
 void initialize_leaf_node(void *node)
 {
@@ -209,49 +206,58 @@ void print_constants()
 //     }
 // }
 
-void indent(uint32_t level) {
-    for (uint32_t i = 0;  i < level; i++) {
+void indent(uint32_t level)
+{
+    for (uint32_t i = 0; i < level; i++)
+    {
         printf("  ");
     }
 }
 
-
-
-
-uint32_t* internal_node_num_keys(void* node) {
+uint32_t *internal_node_num_keys(void *node)
+{
     return node + INTERNAL_NODE_NUM_KEYS_OFFSET;
 }
 
-uint32_t* internal_node_right_child(void* node) {
+uint32_t *internal_node_right_child(void *node)
+{
     return node + INTERNAL_NODE_RIGHT_CHILD_OFFSET;
 }
 
-uint32_t* internal_node_cell(void* node, uint32_t cell_num) {
+uint32_t *internal_node_cell(void *node, uint32_t cell_num)
+{
     return node + INTERNAL_NODE_HEADER_SIZE + cell_num * INTERNAL_NODE_CELL_SIZE;
 }
 
-uint32_t* internal_node_child(void* node, uint32_t child_num) {
+uint32_t *internal_node_child(void *node, uint32_t child_num)
+{
     uint32_t num_keys = *internal_node_num_keys(node);
-    if (child_num > num_keys) {
+    if (child_num > num_keys)
+    {
         printf("Tried to access child_num %d > num_keys %d\n", child_num, num_keys);
         exit(EXIT_FAILURE);
-    } else if (child_num == num_keys) {
+    }
+    else if (child_num == num_keys)
+    {
         return internal_node_right_child(node);
-    } else {
+    }
+    else
+    {
         return internal_node_cell(node, child_num);
     }
 }
 
-uint32_t* internal_node_key(void* node, uint32_t key_num) {
+uint32_t *internal_node_key(void *node, uint32_t key_num)
+{
     return internal_node_cell(node, key_num) + INTERNAL_NODE_CHILD_SIZE;
 }
 
-void initialize_internal_node(void* node) {
+void initialize_internal_node(void *node)
+{
     set_node_type(node, false);
     set_node_root(node, false);
     *internal_node_num_keys(node) = 0;
 }
-
 
 /**
  * @brief 持久化数据
@@ -535,20 +541,51 @@ void set_node_type(void *node, NodeType type)
     *((uint8_t *)(node + NODE_TYPE_OFFSET)) = value;
 }
 
-
-
-uint32_t get_node_max_key(void *node) {
-    switch (get_node_type(node)) {
-        case NODE_INTERNAL:
-            return *internal_node_key(node, *internal_node_num_keys(node) -1);
-        case NODE_LEAF:
-            return *leaf_node_key(node, *leaf_node_num_cells(node) -1);
+uint32_t get_node_max_key(void *node)
+{
+    switch (get_node_type(node))
+    {
+    case NODE_INTERNAL:
+        return *internal_node_key(node, *internal_node_num_keys(node) - 1);
+    case NODE_LEAF:
+        return *leaf_node_key(node, *leaf_node_num_cells(node) - 1);
     }
 }
 
-bool is_node_root(void* node) {
-    uint8_t value = *((uint8_t*)(node + IS_ROOT_OFFSET));
+bool is_node_root(void *node)
+{
+    uint8_t value = *((uint8_t *)(node + IS_ROOT_OFFSET));
     return (bool)value;
+}
+
+Cursor* internal_node_find(Table* table, uint32_t page_num, uint32_t key) {
+    void* node = get_page(table->pager, page_num);
+    uint32_t num_keys = *internal_node_num_keys(node);
+
+    /* Binary search to find index of child to search */
+    uint32_t min_index = 0;
+    uint32_t max_index = num_keys; /* there is one more child than key */
+
+    while (min_index != max_index) {
+        uint32_t index = (min_index + max_index) / 2;
+        uint32_t key_to_right = *internal_node_key(node, index);
+
+        if (key_to_right >= key) {
+            max_index = index;
+        } else {
+            min_index = index + 1;
+        }
+    }
+    uint32_t child_num = *internal_node_child(node, min_index);
+    void* child = get_page(table->pager, child_num);
+
+    switch (get_node_type(child)) {
+        case NODE_LEAF:
+            return leaf_node_find(table, child_num, key);
+        case NODE_INTERNAL:
+            return internal_node_find(table, child_num, key);
+    }
+
 }
 
 
@@ -564,8 +601,7 @@ Cursor *table_find(Table *table, uint32_t key)
     }
     else
     {
-        printf("Need to implement searching an internal node\n");
-        exit(EXIT_FAILURE);
+        return internal_node_find(table, root_page_num, key);
     }
 }
 
@@ -706,33 +742,37 @@ void leaf_node_insert(Cursor *cursor, uint32_t key, Row *value)
     serialize_row(value, leaf_node_value(node, cursor->cell_num));
 }
 
-void print_tree(Pager* pager, uint32_t page_num, uint32_t indentation_level) {
-    void* node = get_page(pager, page_num);
+void print_tree(Pager *pager, uint32_t page_num, uint32_t indentation_level)
+{
+    void *node = get_page(pager, page_num);
     uint32_t num_keys, child;
 
-    switch (get_node_type(node)) {
-        case (NODE_LEAF):
-            num_keys = *leaf_node_num_cells(node);
-            indent(indentation_level);
-            printf("- leaf (size %d)\n", num_keys);
-            for (uint32_t i = 0;  i < num_keys; i++) {
-                indent(indentation_level + 1);
-                printf("- %d\n", *leaf_node_key(node, i));
-            }
-            break;
-        case (NODE_INTERNAL):
-            num_keys = *internal_node_num_keys(node);
-            indent(indentation_level);
-            printf("- leaf (size %d)\n", num_keys);
-            for (uint32_t i = 0;  i < num_keys; i++) {
-                child = *internal_node_child(node, i);
-                print_tree(pager, child, indentation_level + 1);
-
-                indent(indentation_level + 1);
-                printf("- key %d\n", *internal_node_key(node, i));
-            }
-            child = *internal_node_right_child(node);
+    switch (get_node_type(node))
+    {
+    case (NODE_LEAF):
+        num_keys = *leaf_node_num_cells(node);
+        indent(indentation_level);
+        printf("- leaf (size %d)\n", num_keys);
+        for (uint32_t i = 0; i < num_keys; i++)
+        {
+            indent(indentation_level + 1);
+            printf("- %d\n", *leaf_node_key(node, i));
+        }
+        break;
+    case (NODE_INTERNAL):
+        num_keys = *internal_node_num_keys(node);
+        indent(indentation_level);
+        printf("- leaf (size %d)\n", num_keys);
+        for (uint32_t i = 0; i < num_keys; i++)
+        {
+            child = *internal_node_child(node, i);
             print_tree(pager, child, indentation_level + 1);
-            break;
+
+            indent(indentation_level + 1);
+            printf("- key %d\n", *internal_node_key(node, i));
+        }
+        child = *internal_node_right_child(node);
+        print_tree(pager, child, indentation_level + 1);
+        break;
     }
 }
