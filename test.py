@@ -7,7 +7,7 @@ cmd = ["./build/build_my_own_sqlite", "./mydb.db"]
 
 test_input = []
 
-epoch = 27
+epoch = 100
 
 for i in range(epoch):
     test_input.append(f"insert {i} user{i} user{i}@mail.com\n")
@@ -26,7 +26,6 @@ for i in range(epoch + 1):
     
     input_texts =test_input[i]
     time.sleep(0.1)
-    # 发送输入数据并获取输出
 
     for input_text in input_texts:
         proc.stdin.write(input_text)
