@@ -12,4 +12,4 @@ InputBuffer *new_input_buffer();
 // 读取输入
 void read_input(InputBuffer *);
 
-void close_input_buffer();
+void close_input_buffer(InputBuffer *);
