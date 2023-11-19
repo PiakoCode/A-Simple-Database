@@ -7,7 +7,7 @@ cmd = ["./build/build_my_own_sqlite", "./mydb.db"]
 
 test_input = []
 
-epoch = 10
+epoch = 27
 
 for i in range(epoch):
     test_input.append(f"insert {i} user{i} user{i}@mail.com\n")

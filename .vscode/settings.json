@@ -1,7 +1,7 @@
 {
     "cmake.debugConfig": {
         "args": [
-            "./mydb.db"
+            "/home/Piako/code/c/build_my_own_sqlite/mydb.db"
         ]
     }
 }
