@@ -6,6 +6,7 @@ This repository is identical to the [Let's Build a Simple Database](https://csta
 ```shell
 mkdir build
 cd build && cmake ..
+make -j 8
 ./sim_sqlite mydb.db
 ```
 
